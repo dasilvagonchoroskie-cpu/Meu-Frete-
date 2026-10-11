@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_frete/app.dart';
 import 'package:meu_frete/dados/armazenamento.dart';
@@ -40,9 +41,16 @@ void main() {
     final config = await Configuracao.carregar();
     final dados = Dados(ArmazenamentoMemoria(inicial: amostra()));
     await dados.carregar();
-    await tester.pumpWidget(MeuFreteApp(config: config, dados: dados, inicio: tela(dados)));
-    await tester.pumpAndSettle();
-    await expectLater(find.byType(MaterialApp), matchesGoldenFile('capturas/$nome.png'));
+    // Nos testes o Flutter troca sombra por contorno preto; nas imagens da loja
+    // queremos a sombra de verdade. Volta ao normal antes do fim do teste.
+    debugDisableShadows = false;
+    try {
+      await tester.pumpWidget(MeuFreteApp(config: config, dados: dados, inicio: tela(dados)));
+      await tester.pumpAndSettle();
+      await expectLater(find.byType(MaterialApp), matchesGoldenFile('capturas/$nome.png'));
+    } finally {
+      debugDisableShadows = true;
+    }
     return dados;
   }
 

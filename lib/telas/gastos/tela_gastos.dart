@@ -24,7 +24,6 @@ class TelaGastos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dados = context.watch<Dados>();
-    final cores = context.cores;
     final grupos = agruparPorMes<Gasto>(dados.gastos, (g) => g.data);
 
     return Scaffold(
@@ -73,7 +72,7 @@ class TelaGastos extends StatelessWidget {
                                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                               ),
                             ),
-                            Text(reais(g.itens[i].valor), style: estiloNumero(18, cor: cores.negativo)),
+                            Text(reais(g.itens[i].valor), style: estiloNumero(18)),
                           ],
                         ),
                       ),

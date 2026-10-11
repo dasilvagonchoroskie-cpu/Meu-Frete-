@@ -41,7 +41,7 @@ class _PerguntaComissaoState extends State<PerguntaComissao> {
       children: [
         Campo(
           controle: _percentual,
-          rotulo: 'Sua comissão',
+          rotulo: 'Porcentagem padrão',
           tipo: TipoCampo.decimal,
           sufixo: '%',
           ajuda: 'Vale para os fretes novos. Em cada frete dá para mudar, porque tem empresa que paga diferente.',

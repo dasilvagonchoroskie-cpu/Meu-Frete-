@@ -259,6 +259,7 @@ ThemeData _base(Brightness brilho) {
       ),
     ),
     chipTheme: ChipThemeData(
+      selectedColor: esquema.primaryContainer,
       labelStyle: TextStyle(fontFamily: fonteTexto, fontSize: 15, fontWeight: FontWeight.w500, color: texto),
       side: BorderSide(color: esquema.outline),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
