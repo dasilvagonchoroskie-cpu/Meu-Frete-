@@ -1,0 +1,146 @@
+name: Compilar Meu Frete
+
+# A cada envio: analise do codigo, testes das contas, imagens da Play Store,
+# APK (para instalar direto) e AAB (para enviar a Play Store), os dois
+# assinados com a chave de envio do Meu Frete.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+env:
+  FLUTTER_VERSION: '3.47.5'
+  JAVA_VERSION: '17'
+
+jobs:
+  compilar:
+    name: Validar, testar e compilar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Preparar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Baixar dependencias
+        run: flutter pub get
+
+      - name: Analise do codigo (flutter analyze)
+        run: |
+          set -o pipefail
+          if ! flutter analyze --no-fatal-infos 2>&1 | tee analise.log; then
+            grep -E "error|warning" analise.log | head -60 | while IFS= read -r l; do echo "::error title=flutter analyze::$l"; done
+            exit 1
+          fi
+
+      - name: Testes das contas e das telas
+        run: |
+          set -o pipefail
+          if ! flutter test --exclude-tags capturas 2>&1 | tee teste.log; then
+            grep -E "FAILED|\[E\]|Expected:|Actual:|Error:|error:|Exception|Which:|══" teste.log | head -60 | while IFS= read -r l; do echo "::error title=flutter test::$l"; done
+            exit 1
+          fi
+
+      - name: Imagens da Play Store e PDFs de exemplo
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test --tags capturas --update-goldens 2>&1 | tee capturas.log
+          ls -la test/capturas || true
+
+      - name: Publicar as imagens (artefato)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas
+          path: |
+            test/capturas/*.png
+            test/capturas/*.pdf
+            test/failures/*.png
+          if-no-files-found: ignore
+
+      - name: Preparar a chave de envio da Play Store
+        env:
+          CHAVE: ${{ secrets.MEUFRETE_UPLOAD_KEYSTORE_BASE64 }}
+          SENHA: ${{ secrets.MEUFRETE_UPLOAD_KEYSTORE_SENHA }}
+        run: |
+          if [ -z "$CHAVE" ] || [ -z "$SENHA" ]; then
+            echo "::notice::Sem a chave nos segredos: sai com a chave de teste e a assinatura final e feita fora da esteira."
+            echo "ASSINADO=nao" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "$CHAVE" | base64 -d > "$RUNNER_TEMP/meufrete-upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/meufrete-upload.jks" "$SENHA" "meufrete" "$SENHA" > android/key.properties
+          echo "ASSINADO=sim" >> "$GITHUB_ENV"
+
+      - name: Compilar APK e AAB de release
+        run: |
+          NUMERO=$((2000 + ${{ github.run_number }}))
+          echo "NUMERO=$NUMERO" >> "$GITHUB_ENV"
+          set -o pipefail
+          if ! flutter build apk --release --build-number=$NUMERO 2>&1 | tee build.log; then
+            grep -E "^e: |error:|What went wrong|FAILURE|Exception" -A3 build.log | head -60 | while IFS= read -r l; do echo "::error title=flutter build apk::$l"; done
+            exit 1
+          fi
+          if ! flutter build appbundle --release --build-number=$NUMERO 2>&1 | tee build-aab.log; then
+            grep -E "^e: |error:|What went wrong|FAILURE|Exception" -A3 build-aab.log | head -60 | while IFS= read -r l; do echo "::error title=flutter build appbundle::$l"; done
+            exit 1
+          fi
+          mkdir -p saida
+          cp build/app/outputs/flutter-apk/app-release.apk saida/MeuFrete.apk
+          cp build/app/outputs/bundle/release/app-release.aab saida/MeuFrete.aab
+          ls -la saida
+          echo "$(grep '^version:' pubspec.yaml) | codigo de versao: $NUMERO"
+
+      - name: Conferir a assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs saida/MeuFrete.apk | tee assinatura.txt
+          keytool -printcert -jarfile saida/MeuFrete.aab | head -20 || true
+          echo "::notice title=Assinatura::Chave da Play Store: $ASSINADO | codigo de versao $NUMERO"
+
+      - name: Publicar APK e AAB (artefato)
+        uses: actions/upload-artifact@v4
+        with:
+          name: meufrete
+          path: |
+            saida/MeuFrete.apk
+            saida/MeuFrete.aab
+
+      - name: Juntar as imagens da loja
+        if: always()
+        run: |
+          mkdir -p saida
+          if ls test/capturas/* >/dev/null 2>&1; then (cd test && zip -qr ../saida/capturas.zip capturas); fi
+          if ls test/failures/* >/dev/null 2>&1; then (cd test && zip -qr ../saida/falhas.zip failures); fi
+          ls -la saida
+
+      - name: Publicar como Release (link direto)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: versao-mais-recente
+          name: Meu Frete - versao mais recente
+          body: |
+            Meu Frete 2 (Flutter). MeuFrete.apk instala direto no celular. MeuFrete.aab e o arquivo para enviar a Play Store.
+            Codigo de versao ${{ env.NUMERO }}. Chave da Play Store na esteira: ${{ env.ASSINADO }}.
+          files: |
+            saida/MeuFrete.apk
+            saida/MeuFrete.aab
+            saida/capturas.zip
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

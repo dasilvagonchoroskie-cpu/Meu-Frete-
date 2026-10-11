@@ -1,0 +1,55 @@
+name: meu_frete
+description: "Meu Frete - fretes, diesel, gastos e vales do motorista de caminhao."
+publish_to: 'none'
+
+# versao visivel (2.0.0) + codigo de versao. A esteira troca o codigo pelo
+# numero da execucao, para a Play Store sempre receber um numero maior.
+version: 2.0.0+2000
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.2
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.5
+  share_plus: ^10.1.2
+  file_selector: ^1.0.3
+  url_launcher: ^6.3.1
+  pdf: ^3.11.1
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # As letras tambem sao lidas pelo gerador de PDF (rootBundle) pelo caminho.
+  fonts:
+    - family: Barlow
+      fonts:
+        - asset: assets/fonts/Barlow-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Barlow-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Barlow-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Barlow-Bold.ttf
+          weight: 700
+    - family: BarlowSemiCondensed
+      fonts:
+        - asset: assets/fonts/BarlowSemiCondensed-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/BarlowSemiCondensed-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BarlowSemiCondensed-Bold.ttf
+          weight: 700

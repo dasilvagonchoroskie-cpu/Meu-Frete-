@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="icone_fundo">#0B5D3B</color>
+    <color name="fundo_claro">#F1F2EE</color>
+    <color name="fundo_escuro">#111513</color>
+</resources>

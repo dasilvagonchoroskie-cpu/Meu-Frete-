@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+
+import 'dados/configuracao.dart';
+import 'dados/dados.dart';
+import 'tema.dart';
+import 'telas/boas_vindas/tela_boas_vindas.dart';
+import 'telas/casca.dart';
+
+const versaoApp = '2.0.0';
+const enderecoPrivacidade = 'https://fortalezadigitalsecurity.com.br/meufrete/privacidade.html';
+const enderecoSite = 'https://fortalezadigitalsecurity.com.br';
+
+class MeuFreteApp extends StatelessWidget {
+  const MeuFreteApp({super.key, required this.config, required this.dados, this.inicio});
+
+  final Configuracao config;
+  final Dados dados;
+
+  /// Tela inicial forcada (usado nas imagens da loja).
+  final Widget? inicio;
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<Configuracao>.value(value: config),
+        ChangeNotifierProvider<Dados>.value(value: dados),
+      ],
+      child: Consumer<Configuracao>(
+        builder: (context, cfg, _) => MaterialApp(
+          title: 'Meu Frete',
+          debugShowCheckedModeBanner: false,
+          theme: temaClaro,
+          darkTheme: temaEscuro,
+          themeMode: cfg.tema,
+          locale: const Locale('pt', 'BR'),
+          supportedLocales: const [Locale('pt', 'BR')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) {
+            final mq = MediaQuery.of(context);
+            return MediaQuery(
+              data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 1.3)),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+          home: inicio ?? const Raiz(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Primeira tela: a configuracao guiada (so na primeira vez) ou as abas.
+class Raiz extends StatelessWidget {
+  const Raiz({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final feita = context.select<Configuracao, bool>((c) => c.configuracaoInicialFeita);
+    return feita ? const Casca() : const TelaBoasVindas();
+  }
+}
