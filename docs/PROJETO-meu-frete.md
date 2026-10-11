@@ -106,7 +106,8 @@ Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto
 
 - Arquivo `meufrete-upload.jks` (PKCS12, RSA 4096, válida até 2054), alias `meufrete`, mesma senha para a chave e o arquivo. Guardado com o Evandro (não vai para o GitHub).
 - SHA-256 do certificado: 32:73:DD:CC:BA:56:AA:3F:60:20:3C:A9:12:4C:E5:3B:76:42:DA:F5:AB:1E:CA:9F:D0:6A:3D:0A:5A:AF:30:CD
-- A esteira compila com chave de teste. A assinatura final é feita fora: AAB com `jarsigner` (tira a assinatura de teste antes) e APK com `uber-apk-signer --allowResign`.
+- A esteira compila com chave de teste. A assinatura final é feita fora: AAB com `jarsigner` (antes tira a assinatura de teste e a pasta `BUNDLE-METADATA/com.android.tools.build.debugsymbols`, que leva o arquivo de 56 MB para 28 MB) e APK com `uber-apk-signer --allowResign`. Conferido com `bundletool validate`.
+- A sessão do Claude não consegue gravar segredos, criar release nem mudar o repositório para privado pelo GitHub; isso o Evandro faz pelo site.
 - Se um dia os segredos `MEUFRETE_UPLOAD_KEYSTORE_BASE64` e `MEUFRETE_UPLOAD_KEYSTORE_SENHA` forem cadastrados no GitHub (Settings > Secrets and variables > Actions), a esteira já assina sozinha.
 - Na Play Console, aceitar a Assinatura de apps do Google Play: o Google guarda a chave final; se a chave de envio se perder, dá para pedir troca ao suporte.
 
@@ -127,7 +128,7 @@ Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto
 - [x] APK e AAB assinados com a chave de envio
 - [ ] Evandro: criar o app na Play Console, definir preço, enviar o AAB, preencher a ficha
 - [ ] Testar no Moto G35 (instalar o APK)
-- [ ] Repositório volta para privado
+- [ ] Repositório volta para privado (Evandro, pelo site do GitHub)
 
 ## 10. Próximos passos possíveis
 
