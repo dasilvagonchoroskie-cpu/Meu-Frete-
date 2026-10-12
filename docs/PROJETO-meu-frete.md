@@ -20,7 +20,7 @@ A versão 1.2 era em Kotlin (Jetpack Compose + Room, pacote `com.meufrete.app`).
 |---|---|
 | Flutter/Dart | Regra do Evandro desde 24/09/2026: apps novos só em Flutter |
 | Pacote novo `br.com.fortalezadigitalsecurity.meufrete` | Nome único na Play, ligado ao domínio da marca. Não atualiza por cima da 1.2 (a chave antiga não existe), então a 1.2 e a 2.0 são apps separados |
-| Sem servidor de licenças | A venda é pela Play Store (app pago); a trava por aparelho vale só para APK entregue por WhatsApp a uma pessoa |
+| Licença: Play Store sem a Central; APK de venda direta pela Central de Licenças 3 (11/10/2026) | Na Play Store o app é pago e a própria loja cobra (AAB sem trava e sem internet, como a ficha promete). O APK vendido por WhatsApp sai com o portão do pacote `fortaleza_licenca`: pedido de liberação sem chave, teste grátis opcional, chave curta. A esteira monta os dois a partir do mesmo código (`--dart-define=LICENCA_CENTRAL`). |
 | SQLite local (sqflite) com as mesmas tabelas da 1.2 | Mesmo modelo de dados; backup automático do Android leva o banco |
 | Cópia de segurança em arquivo .json | Trocar de celular sem perder nada; restaura pelo seletor de arquivos oficial (file_selector) |
 | Rascunho automático nos formulários novos | "Nada do que você digitar se perde", como na 1.2 |
@@ -129,6 +129,13 @@ Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto
 - [ ] Evandro: criar o app na Play Console, definir preço, enviar o AAB, preencher a ficha
 - [ ] Testar no Moto G35 (instalar o APK)
 - [ ] Repositório volta para privado (Evandro, pelo site do GitHub)
+
+## 9.1 Licença do APK de venda direta (11/10/2026)
+
+- Pacote `fortaleza_licenca` (repositório `fortaleza-central-licencas`, pasta `pacote/`), preso no commit `8d208fbadafd65a681bd81473a4b49619b041b4c` (licenca-v1).
+- Apelido no servidor: `meufrete` (já cadastrado). Na Central, aba Apps: WhatsApp de venda, preço e dias de teste grátis.
+- `MainActivity.kt` entrega o ANDROID_ID e o modelo pelo canal `fortaleza/licenca`.
+- **Antes de vender o APK por WhatsApp:** a chave de assinatura tem que estar nos segredos do GitHub (`MEUFRETE_UPLOAD_KEYSTORE_BASE64` e `MEUFRETE_UPLOAD_KEYSTORE_SENHA`). Sem ela a esteira gera `MeuFrete-venda-direta-TESTE.apk` com uma chave diferente a cada montagem — o código do aparelho mudaria a cada atualização.
 
 ## 10. Próximos passos possíveis
 

@@ -4,7 +4,7 @@ publish_to: 'none'
 
 # versao visivel (2.0.0) + codigo de versao. A esteira troca o codigo pelo
 # numero da execucao, para a Play Store sempre receber um numero maior.
-version: 2.0.0+2000
+version: 2.1.0+2000
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -22,6 +22,15 @@ dependencies:
   share_plus: ^10.1.2
   file_selector: ^1.0.3
   url_launcher: ^6.3.1
+  # Licenca da Fortaleza Digital Security (Central de Licencas 3). So entra
+  # em acao no APK de venda direta (--dart-define=LICENCA_CENTRAL=true); a
+  # versao da Play Store sai sem o portao (a propria loja cobra).
+  fortaleza_licenca:
+    git:
+      url: https://github.com/dasilvagonchoroskie-cpu/fortaleza-central-licencas.git
+      path: pacote/fortaleza_licenca
+      # licenca-v1 (commit fixo do pacote)
+      ref: 8d208fbadafd65a681bd81473a4b49619b041b4c
   pdf: ^3.11.1
   intl: any
 

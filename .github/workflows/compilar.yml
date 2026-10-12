@@ -1,8 +1,9 @@
 name: Compilar Meu Frete
 
 # A cada envio: analise do codigo, testes das contas, imagens da Play Store,
-# APK (para instalar direto) e AAB (para enviar a Play Store), os dois
-# assinados com a chave de envio do Meu Frete.
+# AAB (Play Store, sem trava de licenca e sem internet) e APK de venda direta
+# (com o portao da Central de Licencas 3), os dois assinados com a chave de
+# envio do Meu Frete quando ela estiver nos segredos.
 on:
   push:
     branches: [main]
@@ -87,29 +88,47 @@ jobs:
             "$RUNNER_TEMP/meufrete-upload.jks" "$SENHA" "meufrete" "$SENHA" > android/key.properties
           echo "ASSINADO=sim" >> "$GITHUB_ENV"
 
-      - name: Compilar APK e AAB de release
+      - name: Compilar AAB (Play Store) e APK (venda direta)
         run: |
           NUMERO=$((2000 + ${{ github.run_number }}))
           echo "NUMERO=$NUMERO" >> "$GITHUB_ENV"
           set -o pipefail
-          if ! flutter build apk --release --build-number=$NUMERO 2>&1 | tee build.log; then
-            grep -E "^e: |error:|What went wrong|FAILURE|Exception" -A3 build.log | head -60 | while IFS= read -r l; do echo "::error title=flutter build apk::$l"; done
-            exit 1
-          fi
-          if ! flutter build appbundle --release --build-number=$NUMERO 2>&1 | tee build-aab.log; then
+          # 1) Play Store: SEM o portao de licenca e SEM permissao de internet,
+          #    como a ficha da loja promete (a propria loja cobra o app).
+          if ! flutter build appbundle --release --build-number=$NUMERO --dart-define=LICENCA_CENTRAL=false 2>&1 | tee build-aab.log; then
             grep -E "^e: |error:|What went wrong|FAILURE|Exception" -A3 build-aab.log | head -60 | while IFS= read -r l; do echo "::error title=flutter build appbundle::$l"; done
             exit 1
           fi
           mkdir -p saida
-          cp build/app/outputs/flutter-apk/app-release.apk saida/MeuFrete.apk
           cp build/app/outputs/bundle/release/app-release.aab saida/MeuFrete.aab
+          if unzip -p saida/MeuFrete.aab base/manifest/AndroidManifest.xml | grep -a -q "android.permission.INTERNET"; then
+            echo "ERRO: o AAB da Play Store nao pode pedir internet"; exit 1
+          fi
+          echo "AAB da Play Store: sem portao e sem internet (conferido)."
+          # 2) Venda direta (APK por WhatsApp): passa pela Central de Licencas 3.
+          #    So este APK ganha a permissao de internet (para pedir a liberacao).
+          sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n\n    <application|' android/app/src/main/AndroidManifest.xml
+          grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml || { echo "ERRO: nao consegui por a permissao de internet no APK"; exit 1; }
+          if ! flutter build apk --release --build-number=$NUMERO --dart-define=LICENCA_CENTRAL=true 2>&1 | tee build.log; then
+            grep -E "^e: |error:|What went wrong|FAILURE|Exception" -A3 build.log | head -60 | while IFS= read -r l; do echo "::error title=flutter build apk::$l"; done
+            exit 1
+          fi
+          git checkout android/app/src/main/AndroidManifest.xml
+          # Sem a chave fixa, cada montagem sai com uma chave diferente: o
+          # codigo do aparelho mudaria a cada atualizacao. Esse APK e so de TESTE.
+          if [ "$ASSINADO" = "sim" ]; then APK=MeuFrete.apk; else APK=MeuFrete-venda-direta-TESTE.apk; fi
+          echo "APK=$APK" >> "$GITHUB_ENV"
+          cp build/app/outputs/flutter-apk/app-release.apk "saida/$APK"
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          "$ANDROID_HOME/build-tools/$BT/aapt2" dump permissions "saida/$APK" | tee permissoes.txt
+          grep -q "android.permission.INTERNET" permissoes.txt || { echo "ERRO: o APK de venda direta precisa de internet"; exit 1; }
           ls -la saida
           echo "$(grep '^version:' pubspec.yaml) | codigo de versao: $NUMERO"
 
       - name: Conferir a assinatura
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs saida/MeuFrete.apk | tee assinatura.txt
+          "$APKSIGNER" verify --print-certs "saida/$APK" | tee assinatura.txt
           keytool -printcert -jarfile saida/MeuFrete.aab | head -20 || true
           echo "::notice title=Assinatura::Chave da Play Store: $ASSINADO | codigo de versao $NUMERO"
 
@@ -118,7 +137,7 @@ jobs:
         with:
           name: meufrete
           path: |
-            saida/MeuFrete.apk
+            saida/*.apk
             saida/MeuFrete.aab
 
       - name: Juntar as imagens da loja
@@ -135,10 +154,11 @@ jobs:
           tag_name: versao-mais-recente
           name: Meu Frete - versao mais recente
           body: |
-            Meu Frete 2 (Flutter). MeuFrete.apk instala direto no celular. MeuFrete.aab e o arquivo para enviar a Play Store.
-            Codigo de versao ${{ env.NUMERO }}. Chave da Play Store na esteira: ${{ env.ASSINADO }}.
+            Meu Frete 2.1 (Flutter). MeuFrete.aab e o arquivo para a Play Store (sem trava de licenca e sem internet).
+            ${{ env.APK }} e a venda direta por WhatsApp: so abre no aparelho liberado pela Central de Licencas.
+            Codigo de versao ${{ env.NUMERO }}. Chave fixa na esteira: ${{ env.ASSINADO }} (sem a chave fixa, o APK e so de teste).
           files: |
-            saida/MeuFrete.apk
+            saida/${{ env.APK }}
             saida/MeuFrete.aab
             saida/capturas.zip
           prerelease: true

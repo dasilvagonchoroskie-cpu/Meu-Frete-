@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:fortaleza_licenca/fortaleza_licenca.dart';
 import 'package:provider/provider.dart';
 
 import 'dados/configuracao.dart';
@@ -8,15 +9,19 @@ import 'tema.dart';
 import 'telas/boas_vindas/tela_boas_vindas.dart';
 import 'telas/casca.dart';
 
-const versaoApp = '2.0.0';
+const versaoApp = '2.1.0';
 const enderecoPrivacidade = 'https://fortalezadigitalsecurity.com.br/meufrete/privacidade.html';
 const enderecoSite = 'https://fortalezadigitalsecurity.com.br';
 
 class MeuFreteApp extends StatelessWidget {
-  const MeuFreteApp({super.key, required this.config, required this.dados, this.inicio});
+  const MeuFreteApp({super.key, required this.config, required this.dados, this.inicio, this.licenca});
 
   final Configuracao config;
   final Dados dados;
+
+  /// Licenca pela Central (so no APK de venda direta). Null = sem portao,
+  /// como na versao da Play Store.
+  final ControleLicenca? licenca;
 
   /// Tela inicial forcada (usado nas imagens da loja).
   final Widget? inicio;
@@ -49,10 +54,18 @@ class MeuFreteApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: inicio ?? const Raiz(),
+          home: inicio ?? _comLicenca(const Raiz()),
         ),
       ),
     );
+  }
+
+  /// No APK de venda direta, o app so abre no aparelho liberado pela
+  /// Central de Licencas (pedido de liberacao sem chave, teste gratis, chave).
+  Widget _comLicenca(Widget raiz) {
+    final controle = licenca;
+    if (controle == null) return raiz;
+    return PortaoLicenca(controle: controle, icone: Icons.local_shipping, child: raiz);
   }
 }
 
