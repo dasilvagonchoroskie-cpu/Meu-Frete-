@@ -17,6 +17,9 @@ jobs:
   compilar:
     name: Validar, testar e compilar
     runs-on: ubuntu-latest
+    outputs:
+      numero: ${{ steps.montar.outputs.numero }}
+      assinado: ${{ steps.chave.outputs.assinado }}
     permissions:
       contents: write
     steps:
@@ -74,6 +77,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Preparar a chave de envio da Play Store
+        id: chave
         env:
           CHAVE: ${{ secrets.MEUFRETE_UPLOAD_KEYSTORE_BASE64 }}
           SENHA: ${{ secrets.MEUFRETE_UPLOAD_KEYSTORE_SENHA }}
@@ -81,17 +85,21 @@ jobs:
           if [ -z "$CHAVE" ] || [ -z "$SENHA" ]; then
             echo "::notice::Sem a chave nos segredos: sai com a chave de teste e a assinatura final e feita fora da esteira."
             echo "ASSINADO=nao" >> "$GITHUB_ENV"
+            echo "assinado=nao" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "$CHAVE" | base64 -d > "$RUNNER_TEMP/meufrete-upload.jks"
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$RUNNER_TEMP/meufrete-upload.jks" "$SENHA" "meufrete" "$SENHA" > android/key.properties
           echo "ASSINADO=sim" >> "$GITHUB_ENV"
+          echo "assinado=sim" >> "$GITHUB_OUTPUT"
 
       - name: Compilar AAB (Play Store) e APK (venda direta)
+        id: montar
         run: |
           NUMERO=$((2000 + ${{ github.run_number }}))
           echo "NUMERO=$NUMERO" >> "$GITHUB_ENV"
+          echo "numero=$NUMERO" >> "$GITHUB_OUTPUT"
           set -o pipefail
           # 1) Play Store: SEM o portao de licenca e SEM permissao de internet,
           #    como a ficha da loja promete (a propria loja cobra o app).
@@ -125,6 +133,13 @@ jobs:
           grep -q "android.permission.INTERNET" permissoes.txt || { echo "ERRO: o APK de venda direta precisa de internet"; exit 1; }
           ls -la saida
           echo "$(grep '^version:' pubspec.yaml) | codigo de versao: $NUMERO"
+
+      - name: Guardar o APK de venda direta para abrir no emulador
+        uses: actions/upload-artifact@v4
+        with:
+          name: meufrete-conferencia
+          path: saida/MeuFrete.apk
+          retention-days: 3
 
       - name: Conferir a assinatura
         run: |
@@ -164,6 +179,73 @@ jobs:
           if ls test/failures/* >/dev/null 2>&1; then (cd test && zip -qr ../saida/falhas.zip failures); fi
           ls -la saida
 
+      - name: Guardar as imagens da loja (zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-zip
+          path: saida/capturas.zip
+          if-no-files-found: ignore
+
+  emulador:
+    name: Abrir no celular virtual (nao pode fechar)
+    needs: compilar
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: meufrete-conferencia
+          path: saida
+
+      - name: Ligar a aceleracao do emulador (KVM)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Abrir o Meu Frete (venda direta) no emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash ci/abrir-no-emulador.sh br.com.fortalezadigitalsecurity.meufrete saida/MeuFrete.apk
+
+      - name: Guardar fotos e registro do emulador no repositorio
+        if: always()
+        run: |
+          mkdir -p logs/emulador
+          cp registro-emulador/* logs/emulador/ 2>/dev/null || true
+          git config user.name "acoes"
+          git config user.email "acoes@local"
+          git add logs/emulador
+          git commit -m "registro do emulador (montagem ${{ github.run_number }}) [skip ci]" || exit 0
+          git push || (git pull --rebase && git push) || true
+
+  publicar:
+    name: Publicar (depois do emulador)
+    needs: [compilar, emulador]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: meufrete
+          path: saida
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: capturas-zip
+          path: saida
+
       - name: Publicar como Release (link direto)
         uses: softprops/action-gh-release@v2
         with:
@@ -172,7 +254,7 @@ jobs:
           body: |
             Meu Frete 2.1 (Flutter). MeuFrete.aab e o arquivo para a Play Store (sem trava de licenca e sem internet).
             MeuFrete.apk e a venda direta por WhatsApp: so abre no aparelho liberado pela Central de Licencas (so e publicado com a chave fixa).
-            Codigo de versao ${{ env.NUMERO }}. Chave fixa na esteira: ${{ env.ASSINADO }}.
+            Codigo de versao ${{ needs.compilar.outputs.numero }}. Chave fixa na esteira: ${{ needs.compilar.outputs.assinado }}. Aberto no celular virtual antes de publicar.
           files: |
             saida/*.apk
             saida/MeuFrete.aab
