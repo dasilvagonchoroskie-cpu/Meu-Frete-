@@ -114,9 +114,10 @@ jobs:
             exit 1
           fi
           git checkout android/app/src/main/AndroidManifest.xml
-          # Sem a chave fixa, cada montagem sai com uma chave diferente: o
-          # codigo do aparelho mudaria a cada atualizacao. Esse APK e so de TESTE.
-          if [ "$ASSINADO" = "sim" ]; then APK=MeuFrete.apk; else APK=MeuFrete-venda-direta-TESTE.apk; fi
+          # O APK de venda direta so sai com a chave FIXA do Meu Frete: com outra
+          # chave o codigo do aparelho mudaria e o cliente perderia a liberacao
+          # ao atualizar. Sem a chave nos segredos, ele e conferido mas nao sai.
+          APK=MeuFrete.apk
           echo "APK=$APK" >> "$GITHUB_ENV"
           cp build/app/outputs/flutter-apk/app-release.apk "saida/$APK"
           BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
@@ -131,6 +132,21 @@ jobs:
           "$APKSIGNER" verify --print-certs "saida/$APK" | tee assinatura.txt
           keytool -printcert -jarfile saida/MeuFrete.aab | head -20 || true
           echo "::notice title=Assinatura::Chave da Play Store: $ASSINADO | codigo de versao $NUMERO"
+
+      - name: Sem a chave fixa, o APK de venda direta nao e publicado
+        if: env.ASSINADO != 'sim'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          rm -f saida/MeuFrete.apk
+          gh release delete-asset versao-mais-recente MeuFrete.apk -y -R "${{ github.repository }}" || true
+          echo "::notice title=APK de venda direta::Compilado e conferido, mas so e publicado assinado com a chave fixa do Meu Frete (segredos MEUFRETE_UPLOAD_KEYSTORE_BASE64 e MEUFRETE_UPLOAD_KEYSTORE_SENHA)."
+
+      - name: Tirar do Release o arquivo antigo de teste
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete-asset versao-mais-recente MeuFrete-venda-direta-TESTE.apk -y -R "${{ github.repository }}" || true
 
       - name: Publicar APK e AAB (artefato)
         uses: actions/upload-artifact@v4
@@ -155,10 +171,10 @@ jobs:
           name: Meu Frete - versao mais recente
           body: |
             Meu Frete 2.1 (Flutter). MeuFrete.aab e o arquivo para a Play Store (sem trava de licenca e sem internet).
-            ${{ env.APK }} e a venda direta por WhatsApp: so abre no aparelho liberado pela Central de Licencas.
-            Codigo de versao ${{ env.NUMERO }}. Chave fixa na esteira: ${{ env.ASSINADO }} (sem a chave fixa, o APK e so de teste).
+            MeuFrete.apk e a venda direta por WhatsApp: so abre no aparelho liberado pela Central de Licencas (so e publicado com a chave fixa).
+            Codigo de versao ${{ env.NUMERO }}. Chave fixa na esteira: ${{ env.ASSINADO }}.
           files: |
-            saida/${{ env.APK }}
+            saida/*.apk
             saida/MeuFrete.aab
             saida/capturas.zip
           prerelease: true

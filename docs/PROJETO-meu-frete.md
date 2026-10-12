@@ -135,7 +135,7 @@ Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto
 - Pacote `fortaleza_licenca` (repositório `fortaleza-central-licencas`, pasta `pacote/`), preso no commit `8d208fbadafd65a681bd81473a4b49619b041b4c` (licenca-v1).
 - Apelido no servidor: `meufrete` (já cadastrado). Na Central, aba Apps: WhatsApp de venda, preço e dias de teste grátis.
 - `MainActivity.kt` entrega o ANDROID_ID e o modelo pelo canal `fortaleza/licenca`.
-- **Antes de vender o APK por WhatsApp:** a chave de assinatura tem que estar nos segredos do GitHub (`MEUFRETE_UPLOAD_KEYSTORE_BASE64` e `MEUFRETE_UPLOAD_KEYSTORE_SENHA`). Sem ela a esteira gera `MeuFrete-venda-direta-TESTE.apk` com uma chave diferente a cada montagem — o código do aparelho mudaria a cada atualização.
+- O app é o mesmo (pronto, não é versão de teste); a venda direta só ganhou a trava. O `MeuFrete.apk` de venda direta é **sempre assinado com a chave fixa do Meu Frete** (`meufrete-upload.jks`): com outra chave o código do aparelho mudaria e o cliente perderia a liberação ao atualizar. Na esteira, a chave vem dos segredos `MEUFRETE_UPLOAD_KEYSTORE_BASE64` e `MEUFRETE_UPLOAD_KEYSTORE_SENHA`; sem eles o APK é compilado e conferido, mas não é publicado (a assinatura é feita fora da esteira com o arquivo do Evandro).
 
 ## 10. Próximos passos possíveis
 
