@@ -38,6 +38,7 @@ void main() {
         }),
       ),
       lerIdDoAparelho: () async => 'aparelho-de-teste',
+      lerModelo: () async => 'celular de teste',
     );
 
     await tester.pumpWidget(MeuFreteApp(config: config, dados: dados, licenca: licenca));
