@@ -1,0 +1,85 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/formato_test.dart: dinheiro no padrao brasileiro
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/formato_test.dart: datas
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/formato_test.dart: ler o que foi digitado
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/formato_test.dart: placa do caminhao
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/formato_test.dart: mascaras
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/licenca_test.dart: venda direta: aparelho nao liberado ve a tela de pedir liberacao
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Frete frete real, contratado, comissao e quebra
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Frete comissao sobre o bruto usa o peso da descarga quando tem
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Frete sem descarga nao tem quebra
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Frete mapa ida e volta
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Media do diesel soma os litros desde o ultimo tanque cheio
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Media do diesel tanque nao completado nao tem media
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Media do diesel primeira cheia nao tem media
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Media do diesel nova abastecida conta a partir da ultima cheia
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Media do diesel media do periodo e km total sobre litros totais
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Resumo regra padrao: valor cheio, gastos da empresa, vale desconta
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Resumo gastos do bolso descontam
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Resumo so a minha parte: comissao e o proprio frete
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos este mes
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos mes passado
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos mes passado em janeiro volta para dezembro
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos ultimos 7 dias inclui hoje
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos datas escolhidas fora de ordem nao valem
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos janela da viagem
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/regras_test.dart: Periodos acerto da viagem sempre inclui o proprio frete
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: primeira abertura mostra a configuracao guiada e termina no app
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: quem atualizou da 2.1 informa nome e placa e os registros ficam com o caminhao
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: trocar de caminhao comeca do zero e o anterior fica guardado
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: as cinco abas abrem sem erro
+✅ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: anotar um frete novo aparece na lista
+::endgroup::
+::group::❌ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: copia de seguranca ida e volta (failed)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <4>
+  Actual: <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart:143:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart line 143
+The test description was:
+  copia de seguranca ida e volta
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: copia de seguranca ida e volta
+
+::endgroup::
+::group::❌ /home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart: pdf do relatorio e do acerto (failed)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: a string starting with 'MeuFrete_viagem_'
+  Actual: 'MeuFrete_RVG2C47_viagem_UberlandiaMG-RioVerdeGO_11-10-2026.pdf'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart:157:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/Meu-Frete-/Meu-Frete-/test/app_test.dart line 157
+The test description was:
+  pdf do relatorio e do acerto
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: pdf do relatorio e do acerto
+
+::endgroup::
+
+::error::30 tests passed, 2 failed.
