@@ -58,6 +58,15 @@ class TelaConfiguracoes extends StatelessWidget {
     if (ok != true) return;
     await dados.substituirTudo(lida.tabelas);
     if (lida.configuracao.isNotEmpty) config.aplicarMapa(lida.configuracao);
+    // Celular novo com outra placa digitada: abre no caminhao que veio na copia.
+    final placaDaCopia = lida.configuracao['placa_caminhao'];
+    if (placaDaCopia is String &&
+        placaDaCopia.isNotEmpty &&
+        dados.registrosDaPlaca(config.placaAtual) == 0 &&
+        dados.registrosDaPlaca(placaDaCopia) > 0) {
+      config.placaAtual = placaDaCopia;
+      dados.usarPlaca(placaDaCopia);
+    }
     if (context.mounted) mostrarMensagem(context, 'Cópia restaurada: ${lida.descricao}.');
   }
 

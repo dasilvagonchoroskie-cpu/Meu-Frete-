@@ -137,7 +137,7 @@ void main() {
     final lida = CopiaSeguranca.ler(texto);
     expect(lida.quantos(tabelaFretes), dados.fretes.length);
     expect(lida.quantos(tabelaAbastecimentos), dados.abastecimentos.length);
-    final outro = Dados(ArmazenamentoMemoria());
+    final outro = Dados(ArmazenamentoMemoria(), placa: placaAmostra);
     await outro.carregar();
     await outro.substituirTudo(lida.tabelas);
     expect(outro.fretes.length, dados.fretes.length);
@@ -154,6 +154,6 @@ void main() {
     final viagem = dados.dadosDaViagem(dados.fretes.first, config.regras);
     final bytes2 = await tester.runAsync(() => gerarPdf(viagem, fontes!));
     expect(bytes2!.length, greaterThan(1000));
-    expect(nomeDoArquivoPdf(viagem), startsWith('MeuFrete_viagem_'));
+    expect(nomeDoArquivoPdf(viagem), startsWith('MeuFrete_${placaAmostra}_viagem_'));
   });
 }
