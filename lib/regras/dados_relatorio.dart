@@ -28,6 +28,8 @@ class DadosRelatorio {
     required this.resultado,
     required this.regras,
     this.viagem = '',
+    this.motorista = '',
+    this.placa = '',
   });
 
   final Periodo periodo;
@@ -48,6 +50,10 @@ class DadosRelatorio {
   /// "Uberlândia para Santos" quando e o acerto de uma viagem.
   final String viagem;
 
+  /// Nome do motorista e placa do caminhao (saem no cabecalho do PDF).
+  final String motorista;
+  final String placa;
+
   bool get ehViagem => viagem.isNotEmpty;
 
   bool get vazio => fretes.isEmpty && abastecimentos.isEmpty && vales.isEmpty && gastos.isEmpty;
@@ -63,6 +69,8 @@ DadosRelatorio montarDados({
   required Regras regras,
   ConteudoRelatorio conteudo = ConteudoRelatorio.tudo,
   Frete? soEsteFrete,
+  String motorista = '',
+  String placa = '',
 }) {
   final fretesP = soEsteFrete != null ? [soEsteFrete] : fretes.where((f) => periodo.contem(f.dataCarga)).toList();
   final abastP = abastecimentos.where((a) => !a.pontoDePartida && periodo.contem(a.data)).toList();
@@ -90,6 +98,8 @@ DadosRelatorio montarDados({
     resultado: resultado,
     regras: regras,
     viagem: soEsteFrete?.rota ?? '',
+    motorista: motorista,
+    placa: placa,
   );
 }
 
@@ -103,6 +113,8 @@ DadosRelatorio montarDadosDaViagem({
   required List<AjusteKm> ajustes,
   required Regras regras,
   DateTime? agora,
+  String motorista = '',
+  String placa = '',
 }) {
   final janela = janelaDaViagem(frete.dataCarga, fretes.map((f) => f.dataCarga).toList(), agora: agora);
   return montarDados(
@@ -114,5 +126,7 @@ DadosRelatorio montarDadosDaViagem({
     periodo: janela,
     regras: regras,
     soEsteFrete: frete,
+    motorista: motorista,
+    placa: placa,
   );
 }

@@ -20,6 +20,19 @@ Future<void> carregarFontes() async {
   }
 }
 
+/// Placa e motorista dos dados de exemplo.
+const placaAmostra = 'RVG2C47';
+const motoristaAmostra = 'João Batista';
+
+/// Preferencias de um motorista que ja passou pela configuracao inicial.
+Map<String, Object> preferenciasProntas({String tema = 'claro'}) => {
+      'configuracao_inicial_feita': true,
+      'nome_motorista': motoristaAmostra,
+      'placa_caminhao': placaAmostra,
+      'placas_usadas': <String>[placaAmostra],
+      'tema': tema,
+    };
+
 int dia(int d, {int mesesAtras = 0}) {
   final agora = DateTime.now();
   return inicioDoDia(DateTime(agora.year, agora.month - mesesAtras, d));
@@ -107,7 +120,7 @@ Map<String, List<Map<String, Object?>>> amostra() {
   final ajustes = [
     AjusteKm(id: 40, quando: dia(3, mesesAtras: 1) + 36000000, kmAnterior: 412030, kmNovo: 412300, motivo: 'Aferição do painel'),
   ];
-  Map<String, Object?> comId(Map<String, Object?> m, int id) => {...m, 'id': id};
+  Map<String, Object?> comId(Map<String, Object?> m, int id) => {...m, 'id': id, 'placa': placaAmostra};
   return {
     tabelaFretes: [for (final f in fretes) comId(f.paraMapa(), f.id)],
     tabelaAbastecimentos: [for (final a in abastecimentos) comId(a.paraMapa(), a.id)],

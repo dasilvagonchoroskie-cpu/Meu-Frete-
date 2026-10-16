@@ -7,9 +7,10 @@ import 'dados/configuracao.dart';
 import 'dados/dados.dart';
 import 'tema.dart';
 import 'telas/boas_vindas/tela_boas_vindas.dart';
+import 'telas/caminhao/tela_caminhao.dart';
 import 'telas/casca.dart';
 
-const versaoApp = '2.1.0';
+const versaoApp = '2.2.0';
 const enderecoPrivacidade = 'https://fortalezadigitalsecurity.com.br/meufrete/privacidade.html';
 const enderecoSite = 'https://fortalezadigitalsecurity.com.br';
 
@@ -75,7 +76,11 @@ class Raiz extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final feita = context.select<Configuracao, bool>((c) => c.configuracaoInicialFeita);
-    return feita ? const Casca() : const TelaBoasVindas();
+    final (feita, identificado) =
+        context.select<Configuracao, (bool, bool)>((c) => (c.configuracaoInicialFeita, c.identificado));
+    if (!feita) return const TelaBoasVindas();
+    // Quem ja usava antes da versao 2.2 informa nome e placa uma vez.
+    if (!identificado) return const TelaIdentificacao();
+    return const Casca();
   }
 }

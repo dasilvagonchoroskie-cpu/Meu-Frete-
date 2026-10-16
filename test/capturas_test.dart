@@ -37,9 +37,10 @@ void main() {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({'configuracao_inicial_feita': configurado, 'tema': tema});
+    SharedPreferences.setMockInitialValues(
+        configurado ? preferenciasProntas(tema: tema) : <String, Object>{'tema': tema});
     final config = await Configuracao.carregar();
-    final dados = Dados(ArmazenamentoMemoria(inicial: amostra()));
+    final dados = Dados(ArmazenamentoMemoria(inicial: amostra()), placa: config.placaAtual);
     await dados.carregar();
     // Nos testes o Flutter troca sombra por contorno preto; nas imagens da loja
     // queremos a sombra de verdade. Volta ao normal antes do fim do teste.
@@ -66,15 +67,15 @@ void main() {
   testWidgets('10 configuracoes', (t) => capturar(t, '10_configuracoes', (_) => const TelaConfiguracoes()));
 
   testWidgets('pdfs de exemplo', (tester) async {
-    SharedPreferences.setMockInitialValues({'configuracao_inicial_feita': true});
+    SharedPreferences.setMockInitialValues(preferenciasProntas());
     final config = await Configuracao.carregar();
-    final dados = Dados(ArmazenamentoMemoria(inicial: amostra()));
+    final dados = Dados(ArmazenamentoMemoria(inicial: amostra()), placa: config.placaAtual);
     await dados.carregar();
     await tester.runAsync(() async {
       final fontes = await FontesPdf.carregar();
       final periodo = calcularPeriodo(TipoPeriodo.mesAtual)!;
-      final mes = await gerarPdf(dados.dadosDoPeriodo(periodo, config.regras), fontes);
-      final viagem = await gerarPdf(dados.dadosDaViagem(dados.freteComId(2)!, config.regras), fontes);
+      final mes = await gerarPdf(dados.dadosDoPeriodo(periodo, config.regras, motorista: config.nomeMotorista), fontes);
+      final viagem = await gerarPdf(dados.dadosDaViagem(dados.freteComId(2)!, config.regras, motorista: config.nomeMotorista), fontes);
       Directory('test/capturas').createSync(recursive: true);
       File('test/capturas/relatorio_do_mes.pdf').writeAsBytesSync(mes);
       File('test/capturas/acerto_da_viagem.pdf').writeAsBytesSync(viagem);

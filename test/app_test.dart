@@ -5,6 +5,7 @@ import 'package:meu_frete/dados/armazenamento.dart';
 import 'package:meu_frete/dados/configuracao.dart';
 import 'package:meu_frete/dados/copia_seguranca.dart';
 import 'package:meu_frete/dados/dados.dart';
+import 'package:meu_frete/dados/modelos.dart';
 import 'package:meu_frete/relatorio/gerador_pdf.dart';
 import 'package:meu_frete/regras/periodo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,9 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'apoio.dart';
 
 Future<(Configuracao, Dados)> preparar({bool configurado = true, bool comAmostra = true}) async {
-  SharedPreferences.setMockInitialValues({if (configurado) 'configuracao_inicial_feita': true});
+  SharedPreferences.setMockInitialValues(configurado ? preferenciasProntas() : <String, Object>{});
   final config = await Configuracao.carregar();
-  final dados = Dados(ArmazenamentoMemoria(inicial: comAmostra ? amostra() : null));
+  final dados = Dados(ArmazenamentoMemoria(inicial: comAmostra ? amostra() : null), placa: config.placaAtual);
   await dados.carregar();
   return (config, dados);
 }
@@ -32,14 +33,66 @@ void main() {
     expect(find.text('Começar'), findsOneWidget);
     await tester.tap(find.text('Começar'));
     await tester.pumpAndSettle();
-    for (var i = 0; i < 4; i++) {
+    // Nome e placa sao obrigatorios: sem eles nao passa.
+    await tester.tap(find.text('Continuar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Escreva o nome do motorista.'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'Nome do motorista'), 'Evandro');
+    await tester.enterText(find.widgetWithText(TextField, 'Placa do caminhão'), 'abc1d23');
+    await tester.pumpAndSettle();
+    expect(find.text('ABC1D23'), findsOneWidget);
+    for (var i = 0; i < 5; i++) {
       await tester.tap(find.text('Continuar'));
       await tester.pumpAndSettle();
     }
     await tester.tap(find.text('Abrir o app'));
     await tester.pumpAndSettle();
     expect(config.configuracaoInicialFeita, isTrue);
+    expect(config.nomeMotorista, 'Evandro');
+    expect(config.placaAtual, 'ABC1D23');
     expect(find.text('Você tem para receber'), findsOneWidget);
+  });
+
+  testWidgets('quem atualizou da 2.1 informa nome e placa e os registros ficam com o caminhao', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2160);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({'configuracao_inicial_feita': true});
+    final config = await Configuracao.carregar();
+    final semPlaca = amostra().map((t, linhas) => MapEntry(t, [for (final l in linhas) {...l, 'placa': ''}]));
+    final dados = Dados(ArmazenamentoMemoria(inicial: semPlaca));
+    await dados.carregar();
+    await tester.pumpWidget(MeuFreteApp(config: config, dados: dados));
+    await tester.pumpAndSettle();
+    expect(find.text('Salvar e continuar'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextField, 'Nome do motorista'), 'Evandro');
+    await tester.enterText(find.widgetWithText(TextField, 'Placa do caminhão'), 'RVG2C47');
+    await tester.tap(find.text('Salvar e continuar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Você tem para receber'), findsOneWidget);
+    expect(dados.fretes, hasLength(4));
+    expect(dados.fretes.every((f) => f.placa == 'RVG2C47'), isTrue);
+  });
+
+  testWidgets('trocar de caminhao comeca do zero e o anterior fica guardado', (tester) async {
+    final (config, dados) = await preparar();
+    expect(dados.fretes, hasLength(4));
+    config.placaAtual = 'ABC1D23';
+    dados.usarPlaca('ABC1D23');
+    expect(dados.fretes, isEmpty);
+    expect(dados.pontoDePartida, isNull);
+    await dados.salvarFrete(Frete(origem: 'Goiatuba (GO)', destino: 'Santos (SP)', dataCarga: dia(3), adiantamento: 900));
+    expect(dados.fretes.single.placa, 'ABC1D23');
+    expect(config.placasUsadas, containsAll(['RVG2C47', 'ABC1D23']));
+    dados.usarPlaca('RVG2C47');
+    expect(dados.fretes, hasLength(4));
+    expect(dados.placasComRegistro, ['ABC1D23', 'RVG2C47']);
+    await dados.corrigirPlaca('ABC1D23', 'ABC1D24');
+    dados.usarPlaca('ABC1D24');
+    expect(dados.fretes, hasLength(1));
+    final viagem = dados.dadosDaViagem(dados.fretes.single, config.regras, motorista: 'Evandro');
+    expect(viagem.placa, 'ABC1D24');
+    expect(nomeDoArquivoPdf(viagem), startsWith('MeuFrete_ABC1D24_viagem_'));
   });
 
   testWidgets('as cinco abas abrem sem erro', (tester) async {

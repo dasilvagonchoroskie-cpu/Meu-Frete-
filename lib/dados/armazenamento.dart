@@ -20,6 +20,10 @@ abstract class Armazenamento {
 
   /// Troca tudo de uma vez (restaurar copia de seguranca).
   Future<void> substituirTudo(Map<String, List<Map<String, Object?>>> tabelas);
+
+  /// Troca a placa de todos os registros [de] para [para]. Com [de] vazio,
+  /// marca os registros que ainda nao tinham caminhao (versao 2.0/2.1).
+  Future<void> renomearPlaca(String de, String para);
 }
 
 const tabelaFretes = 'fretes';
@@ -44,7 +48,15 @@ class ArmazenamentoSqlite implements Armazenamento {
     final pasta = await getDatabasesPath();
     _db = await openDatabase(
       p.join(pasta, 'meufrete.db'),
-      version: 1,
+      version: 2,
+      onUpgrade: (db, antiga, nova) async {
+        // Versao 2 (Meu Frete 2.2): cada registro guarda a placa do caminhao.
+        if (antiga < 2) {
+          for (final t in todasAsTabelas) {
+            await db.execute("ALTER TABLE $t ADD COLUMN placa TEXT NOT NULL DEFAULT ''");
+          }
+        }
+      },
       onCreate: (db, versao) async {
         await db.execute('CREATE TABLE IF NOT EXISTS fretes ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, '
@@ -53,19 +65,19 @@ class ArmazenamentoSqlite implements Armazenamento {
             'adiantamento REAL NOT NULL, saldo REAL NOT NULL, '
             'percentualComissao REAL NOT NULL DEFAULT 13.0, pedagio REAL NOT NULL DEFAULT 0.0, '
             'comissaoSobreBruto INTEGER NOT NULL DEFAULT 1, pesoDescargaKg REAL NOT NULL DEFAULT 0.0, '
-            'descontoQuebra REAL NOT NULL DEFAULT 0.0)');
+            "descontoQuebra REAL NOT NULL DEFAULT 0.0, placa TEXT NOT NULL DEFAULT '')");
         await db.execute('CREATE TABLE IF NOT EXISTS abastecimentos ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data INTEGER NOT NULL, '
             'cidade TEXT NOT NULL, posto TEXT NOT NULL, litros REAL NOT NULL, valor REAL NOT NULL, '
-            'km REAL NOT NULL, tanqueCheio INTEGER NOT NULL, pontoDePartida INTEGER NOT NULL)');
+            "km REAL NOT NULL, tanqueCheio INTEGER NOT NULL, pontoDePartida INTEGER NOT NULL, placa TEXT NOT NULL DEFAULT '')");
         await db.execute('CREATE TABLE IF NOT EXISTS ajustes_km ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, quando INTEGER NOT NULL, '
-            'kmAnterior REAL NOT NULL, kmNovo REAL NOT NULL, motivo TEXT NOT NULL)');
+            "kmAnterior REAL NOT NULL, kmNovo REAL NOT NULL, motivo TEXT NOT NULL, placa TEXT NOT NULL DEFAULT '')");
         await db.execute('CREATE TABLE IF NOT EXISTS gastos ('
             'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data INTEGER NOT NULL, '
-            'valor REAL NOT NULL, categoria TEXT NOT NULL)');
+            "valor REAL NOT NULL, categoria TEXT NOT NULL, placa TEXT NOT NULL DEFAULT '')");
         await db.execute('CREATE TABLE IF NOT EXISTS vales ('
-            'id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data INTEGER NOT NULL, valor REAL NOT NULL)');
+            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, data INTEGER NOT NULL, valor REAL NOT NULL, placa TEXT NOT NULL DEFAULT '')");
       },
     );
   }
@@ -117,6 +129,15 @@ class ArmazenamentoSqlite implements Armazenamento {
         for (final linha in tabelas[t] ?? const <Map<String, Object?>>[]) {
           await txn.insert(t, linha);
         }
+      }
+    });
+  }
+
+  @override
+  Future<void> renomearPlaca(String de, String para) async {
+    await _banco.transaction((txn) async {
+      for (final t in todasAsTabelas) {
+        await txn.update(t, {'placa': para}, where: 'placa = ?', whereArgs: [de]);
       }
     });
   }
@@ -214,6 +235,15 @@ class ArmazenamentoMemoria implements Armazenamento {
         if (id > _ultimoId) _ultimoId = id;
         copia['id'] = id;
         _tabelas[t]!.add(copia);
+      }
+    }
+  }
+
+  @override
+  Future<void> renomearPlaca(String de, String para) async {
+    for (final t in todasAsTabelas) {
+      for (final m in _tabelas[t]!) {
+        if ((m['placa'] ?? '') == de) m['placa'] = para;
       }
     }
   }

@@ -5,11 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../app.dart';
 import '../../componentes/basicos.dart';
 import '../../componentes/perguntas_trabalho.dart';
+import '../../componentes/placa_veiculo.dart';
 import '../../dados/configuracao.dart';
 import '../../dados/copia_seguranca.dart';
 import '../../dados/dados.dart';
 import '../../nucleo/formato.dart';
 import '../../tema.dart';
+import '../caminhao/tela_caminhao.dart';
 
 class TelaConfiguracoes extends StatelessWidget {
   const TelaConfiguracoes({super.key});
@@ -74,6 +76,41 @@ class TelaConfiguracoes extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
         children: [
+          const TituloSecao('Motorista e caminhão', espacoAcima: 8),
+          Material(
+            color: cores.campoFundo,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TelaCaminhao())),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    PlacaVeiculo(config.placaAtual, tamanho: 18),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            config.nomeMotorista.isEmpty ? 'Sem nome' : config.nomeMotorista,
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                          ),
+                          Text('Mudar o nome ou trocar de caminhão', style: TextStyle(fontSize: 14, color: cores.textoFraco)),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: cores.textoFraco),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const TituloSecao('Como você trabalha'),
           Nota('Estas respostas mudam a conta do seu valor líquido. Responda com o seu combinado, '
               'não com o do colega.'),
           const TituloSecao('Sua comissão', espacoAcima: 20),

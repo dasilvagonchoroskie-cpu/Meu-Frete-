@@ -23,6 +23,8 @@ A versão 1.2 era em Kotlin (Jetpack Compose + Room, pacote `com.meufrete.app`).
 | Licença: Play Store sem a Central; APK de venda direta pela Central de Licenças 3 (11/10/2026) | Na Play Store o app é pago e a própria loja cobra (AAB sem trava e sem internet, como a ficha promete). O APK vendido por WhatsApp sai com o portão do pacote `fortaleza_licenca`: pedido de liberação sem chave, teste grátis opcional, chave curta. A esteira monta os dois a partir do mesmo código (`--dart-define=LICENCA_CENTRAL`). |
 | SQLite local (sqflite) com as mesmas tabelas da 1.2 | Mesmo modelo de dados; backup automático do Android leva o banco |
 | Cópia de segurança em arquivo .json | Trocar de celular sem perder nada; restaura pelo seletor de arquivos oficial (file_selector) |
+| Nome do motorista e placa do caminhão obrigatórios (2.2, 16/10/2026) | Pedido do Evandro: a 1.2 tinha e o PDF precisa mostrar de qual caminhão e de qual motorista é o registro. Pedidos na configuração inicial (passo 1) e, para quem atualizou da 2.0/2.1, numa tela única antes de abrir o app. Mudam em Configurações > Motorista e caminhão |
+| Cada registro guarda a placa; o app mostra só o caminhão em uso (2.2) | Trocou de caminhão: o motorista continua com o mesmo app e só troca a placa. O caminhão novo começa do zero (contas, km inicial e média do diesel, que depende do painel); o anterior fica guardado e volta escolhendo a placa. "Corrigir a placa" troca a placa digitada errada em todos os registros |
 | Rascunho automático nos formulários novos | "Nada do que você digitar se perde", como na 1.2 |
 | Acentos corretos em tudo (1.2 escrevia sem acento) | Qualidade de produto de loja |
 | PDF com a letra Barlow embutida | Acentos, "−" e "×" saem certos em qualquer celular |
@@ -55,7 +57,8 @@ Média do diesel:
 Períodos: este mês, mês passado, 7/15/30 dias (contando hoje), datas escolhidas.
 Janela da viagem (acerto): do dia da carga (ou do dia seguinte, se houve carga antes) até o dia da carga seguinte, esse dia incluído; se não houver carga seguinte, até hoje.
 
-Configuração (as quatro perguntas, chaves do SharedPreferences):
+Configuração (chaves do SharedPreferences):
+- `nome_motorista`, `placa_caminhao` (sem traço, ex. ABC1D23), `placas_usadas` (lista).
 - `percentual_padrao` (13), `comissao_sobre_bruto` (false = só o frete), `frete_real_eh_valor_cheio` (true), `gastos_descontam` (false = empresa paga), `vale_desconta` (true), `tema` (sistema/claro/escuro), `configuracao_inicial_feita`.
 
 ## 4. Arquitetura
@@ -85,14 +88,15 @@ Dependências: provider, sqflite, path, shared_preferences, path_provider, share
 
 ## 5. Telas
 
-1. Boas-vindas (primeira abertura): placa "Meu Frete" + 4 passos (comissão, dinheiro do frete, gastos, vale) + exemplo da conta.
-2. Resumo: períodos em fichas, placa "Você tem para receber", comissão/gastos/vales, conta do caminhão, aviso de fretes aguardando saldo, diesel (média, litros, preço médio). Botões: PDF e Configurações.
+1. Boas-vindas (primeira abertura): placa "Meu Frete" + 5 passos (motorista e caminhão — obrigatório —, comissão, dinheiro do frete, gastos, vale) + exemplo da conta. As páginas só passam pelos botões.
+1.1 Motorista e caminhão (quem atualizou da 2.0/2.1 sem nome e placa): tela única, obrigatória; os registros antigos ficam com a placa informada.
+2. Resumo: no topo a placa (desenho Mercosul) e o nome do motorista (toque abre Motorista e caminhão); períodos em fichas, placa "Você tem para receber", comissão/gastos/vales, conta do caminhão, aviso de fretes aguardando saldo, diesel (média, litros, preço médio). Botões: PDF e Configurações.
 3. Fretes: lista por mês (total do mês), linha com data, trajeto origem → destino, valor e "Aguardando saldo". Botão "Novo frete". Detalhe com placa "Sua parte", pagamento, descarga/quebra, conta da viagem e botão "Enviar acerto da viagem".
 4. Diesel: lista por mês com média do mês, média de cada abastecida, ponto de partida no fim; menu com km inicial e histórico de mudanças.
 5. Gastos: lista por mês; formulário com fichas de categoria (usadas + comuns).
 6. Vales: lista por mês.
 7. Relatório em PDF: período, o que vai (tudo, fretes, diesel, gastos, vales), contagem, gerar e enviar.
-8. Configurações: as 4 perguntas + exemplo, tema, cópia de segurança (gerar/restaurar), versão, política de privacidade, site.
+8. Configurações: Motorista e caminhão (mudar nome, trocar de caminhão, corrigir placa, outros caminhões já usados), as 4 perguntas + exemplo, tema, cópia de segurança (gerar/restaurar), versão, política de privacidade, site.
 
 Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto #1E2427, concreto #F1F2EE. Letra Barlow (inspirada em placas). O número mais importante de cada tela vai numa "placa" verde com filete branco.
 
@@ -129,6 +133,15 @@ Visual: cores da estrada — verde placa #0B5D3B, amarelo faixa #F2B300, asfalto
 - [ ] Evandro: criar o app na Play Console, definir preço, enviar o AAB, preencher a ficha
 - [ ] Testar no Moto G35 (instalar o APK)
 - [ ] Repositório volta para privado (Evandro, pelo site do GitHub)
+
+## 9.0 Versão 2.2 — motorista e placa (16/10/2026)
+
+- Banco versão 2: coluna `placa` em fretes, abastecimentos, ajustes_km, gastos e vales (`ALTER TABLE` na atualização; o que já existia fica com a primeira placa informada).
+- `Dados` guarda tudo e filtra pela placa em uso (`usarPlaca`, `marcarSemPlaca`, `corrigirPlaca`, `placasComRegistro`).
+- PDF: caixa do cabeçalho com Período, Caminhão (placa) e Motorista; nome do arquivo começa com a placa (`MeuFrete_ABC1D23_...`).
+- Cópia de segurança leva a placa de cada registro, o nome e a lista de placas.
+- Placa aceita: Mercosul (ABC1D23) ou antiga (ABC-1234), guardada sem traço.
+- Na esteira, sem a chave nos segredos, o APK de venda direta vai para o Release `interno-para-assinar` (nome `MeuFrete-NAO-INSTALAR-assinar-fora.apk`) só para ser assinado fora com `meufrete-upload.jks`.
 
 ## 9.1 Licença do APK de venda direta (11/10/2026)
 

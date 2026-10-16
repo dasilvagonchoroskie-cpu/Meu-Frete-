@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../componentes/basicos.dart';
 import '../../componentes/placa.dart';
+import '../../componentes/placa_veiculo.dart';
 import '../../componentes/seletor_periodo.dart';
 import '../../dados/configuracao.dart';
 import '../../dados/dados.dart';
@@ -10,6 +11,7 @@ import '../../nucleo/formato.dart';
 import '../../regras/media_diesel.dart';
 import '../../regras/periodo.dart';
 import '../../tema.dart';
+import '../caminhao/tela_caminhao.dart';
 import '../configuracoes/tela_configuracoes.dart';
 import '../relatorio/tela_relatorio.dart';
 
@@ -30,7 +32,7 @@ class _TelaResumoState extends State<TelaResumo> {
     final regras = config.regras;
     final cores = context.cores;
     final periodo = _escolha.periodo ?? calcularPeriodo(TipoPeriodo.mesAtual)!;
-    final d = dados.dadosDoPeriodo(periodo, regras);
+    final d = dados.dadosDoPeriodo(periodo, regras, motorista: config.nomeMotorista);
     final r = d.resultado;
     final descricao = _escolha.descricao;
 
@@ -68,6 +70,27 @@ class _TelaResumoState extends State<TelaResumo> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TelaCaminhao())),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 2, 20, 12),
+              child: Row(
+                children: [
+                  PlacaVeiculo(config.placaAtual, tamanho: 16),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      config.nomeMotorista,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Icon(Icons.swap_horiz, color: cores.textoFraco, semanticLabel: 'Trocar de caminhão'),
+                ],
+              ),
+            ),
+          ),
           SeletorPeriodo(escolha: _escolha, aoMudar: (e) => setState(() => _escolha = e)),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),

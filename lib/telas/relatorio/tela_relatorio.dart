@@ -40,7 +40,7 @@ class _TelaRelatorioState extends State<TelaRelatorio> {
     final dados = context.watch<Dados>();
     final config = context.watch<Configuracao>();
     final periodo = _escolha.periodo;
-    final d = periodo == null ? null : dados.dadosDoPeriodo(periodo, config.regras, conteudo: _conteudo);
+    final d = periodo == null ? null : dados.dadosDoPeriodo(periodo, config.regras, conteudo: _conteudo, motorista: config.nomeMotorista);
 
     final List<String> partes;
     if (d == null) {

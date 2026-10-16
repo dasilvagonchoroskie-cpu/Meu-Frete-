@@ -26,9 +26,13 @@ class Frete {
     this.comissaoSobreBruto = true,
     this.pesoDescargaKg = 0,
     this.descontoQuebra = 0,
+    this.placa = '',
   });
 
   final int id;
+
+  /// Placa do caminhao em que o frete foi feito (sem traco).
+  final String placa;
   final String origem;
   final String destino;
   final String empresa;
@@ -99,10 +103,12 @@ class Frete {
         comissaoSobreBruto: comissaoSobreBruto,
         pesoDescargaKg: pesoDescargaKg,
         descontoQuebra: descontoQuebra,
+        placa: placa,
       );
 
   Map<String, Object?> paraMapa() => {
         if (id != 0) 'id': id,
+        'placa': placa,
         'origem': origem,
         'destino': destino,
         'empresa': empresa,
@@ -133,6 +139,7 @@ class Frete {
         comissaoSobreBruto: _b(m['comissaoSobreBruto'], padrao: true),
         pesoDescargaKg: _d(m['pesoDescargaKg']),
         descontoQuebra: _d(m['descontoQuebra']),
+        placa: _s(m['placa']),
       );
 }
 
@@ -147,9 +154,11 @@ class Abastecimento {
     required this.km,
     this.tanqueCheio = true,
     this.pontoDePartida = false,
+    this.placa = '',
   });
 
   final int id;
+  final String placa;
   final int data;
   final String cidade;
   final String posto;
@@ -173,10 +182,12 @@ class Abastecimento {
         km: km,
         tanqueCheio: tanqueCheio,
         pontoDePartida: pontoDePartida,
+        placa: placa,
       );
 
   Map<String, Object?> paraMapa() => {
         if (id != 0) 'id': id,
+        'placa': placa,
         'data': data,
         'cidade': cidade,
         'posto': posto,
@@ -197,6 +208,7 @@ class Abastecimento {
         km: _d(m['km']),
         tanqueCheio: _b(m['tanqueCheio'], padrao: true),
         pontoDePartida: _b(m['pontoDePartida']),
+        placa: _s(m['placa']),
       );
 }
 
@@ -208,9 +220,11 @@ class AjusteKm {
     required this.kmAnterior,
     required this.kmNovo,
     required this.motivo,
+    this.placa = '',
   });
 
   final int id;
+  final String placa;
   final int quando;
   final double kmAnterior;
   final double kmNovo;
@@ -218,6 +232,7 @@ class AjusteKm {
 
   Map<String, Object?> paraMapa() => {
         if (id != 0) 'id': id,
+        'placa': placa,
         'quando': quando,
         'kmAnterior': kmAnterior,
         'kmNovo': kmNovo,
@@ -230,21 +245,24 @@ class AjusteKm {
         kmAnterior: _d(m['kmAnterior']),
         kmNovo: _d(m['kmNovo']),
         motivo: _s(m['motivo']),
+        placa: _s(m['placa']),
       );
 }
 
 class Gasto {
-  const Gasto({this.id = 0, required this.data, required this.valor, required this.categoria});
+  const Gasto({this.id = 0, required this.data, required this.valor, required this.categoria, this.placa = ''});
 
   final int id;
+  final String placa;
   final int data;
   final double valor;
   final String categoria;
 
-  Gasto copyWith({int? id}) => Gasto(id: id ?? this.id, data: data, valor: valor, categoria: categoria);
+  Gasto copyWith({int? id}) => Gasto(id: id ?? this.id, data: data, valor: valor, categoria: categoria, placa: placa);
 
   Map<String, Object?> paraMapa() => {
         if (id != 0) 'id': id,
+        'placa': placa,
         'data': data,
         'valor': valor,
         'categoria': categoria,
@@ -255,21 +273,24 @@ class Gasto {
         data: _i(m['data']),
         valor: _d(m['valor']),
         categoria: _s(m['categoria']),
+        placa: _s(m['placa']),
       );
 }
 
 /// Dinheiro que o motorista pegou adiantado.
 class Vale {
-  const Vale({this.id = 0, required this.data, required this.valor});
+  const Vale({this.id = 0, required this.data, required this.valor, this.placa = ''});
 
   final int id;
+  final String placa;
   final int data;
   final double valor;
 
-  Vale copyWith({int? id}) => Vale(id: id ?? this.id, data: data, valor: valor);
+  Vale copyWith({int? id}) => Vale(id: id ?? this.id, data: data, valor: valor, placa: placa);
 
   Map<String, Object?> paraMapa() => {
         if (id != 0) 'id': id,
+        'placa': placa,
         'data': data,
         'valor': valor,
       };
@@ -278,5 +299,6 @@ class Vale {
         id: _i(m['id']),
         data: _i(m['data']),
         valor: _d(m['valor']),
+        placa: _s(m['placa']),
       );
 }

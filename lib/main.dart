@@ -21,7 +21,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   final config = await Configuracao.carregar();
-  final dados = Dados(ArmazenamentoSqlite());
+  final dados = Dados(ArmazenamentoSqlite(), placa: config.placaAtual);
   await dados.carregar();
   runApp(MeuFreteApp(config: config, dados: dados, licenca: licencaCentral ? _licenca : null));
 }

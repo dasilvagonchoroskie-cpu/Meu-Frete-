@@ -33,7 +33,7 @@ class _DetalheFreteState extends State<DetalheFrete> {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
 
-    final viagem = dados.dadosDaViagem(f, config.regras);
+    final viagem = dados.dadosDaViagem(f, config.regras, motorista: config.nomeMotorista);
     final r = viagem.resultado;
     final cheio = config.freteRealEhValorCheio;
     final contratado = f.valorContratado;

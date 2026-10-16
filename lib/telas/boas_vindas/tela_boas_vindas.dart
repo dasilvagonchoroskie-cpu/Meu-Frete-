@@ -5,10 +5,13 @@ import '../../componentes/basicos.dart';
 import '../../componentes/perguntas_trabalho.dart';
 import '../../componentes/placa.dart';
 import '../../dados/configuracao.dart';
+import '../../nucleo/placa.dart';
 import '../../tema.dart';
+import '../caminhao/tela_caminhao.dart';
 
-/// Primeira abertura: boas-vindas e as quatro perguntas de como o motorista
-/// trabalha. Tudo pode ser mudado depois em Configuracoes.
+/// Primeira abertura: boas-vindas, nome do motorista e placa do caminhao
+/// (obrigatorios, saem no relatorio) e as quatro perguntas de como o
+/// motorista trabalha. Tudo pode ser mudado depois em Configuracoes.
 class TelaBoasVindas extends StatefulWidget {
   const TelaBoasVindas({super.key});
 
@@ -19,17 +22,41 @@ class TelaBoasVindas extends StatefulWidget {
 class _TelaBoasVindasState extends State<TelaBoasVindas> {
   final _paginas = PageController();
   int _pagina = 0;
+  late final TextEditingController _nome;
+  late final TextEditingController _placa;
+  String? _erroNome;
+  String? _erroPlaca;
 
-  static const _total = 6;
+  static const _total = 7;
+  static const _paginaIdentificacao = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    final config = context.read<Configuracao>();
+    _nome = TextEditingController(text: config.nomeMotorista);
+    _placa = TextEditingController(text: placaTexto(config.placaAtual));
+  }
 
   @override
   void dispose() {
     _paginas.dispose();
+    _nome.dispose();
+    _placa.dispose();
     super.dispose();
   }
 
-  void _avancar() {
+  Future<void> _avancar() async {
     FocusScope.of(context).unfocus();
+    if (_pagina == _paginaIdentificacao) {
+      setState(() {
+        _erroNome = erroDoNome(_nome.text);
+        _erroPlaca = erroDaPlaca(_placa.text);
+      });
+      if (_erroNome != null || _erroPlaca != null) return;
+      await gravarIdentificacao(context, nome: _nome.text, placa: _placa.text);
+      if (!mounted) return;
+    }
     if (_pagina == _total - 1) {
       context.read<Configuracao>().configuracaoInicialFeita = true;
       return;
@@ -45,7 +72,7 @@ class _TelaBoasVindasState extends State<TelaBoasVindas> {
   Widget _passo(int numero, String titulo, String texto, Widget conteudo) => ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
         children: [
-          Text('Passo $numero de 4', style: TextStyle(fontSize: 15, color: context.cores.textoFraco)),
+          Text('Passo $numero de 5', style: TextStyle(fontSize: 15, color: context.cores.textoFraco)),
           const SizedBox(height: 6),
           Text(titulo, style: context.textos.headlineSmall),
           const SizedBox(height: 8),
@@ -85,13 +112,33 @@ class _TelaBoasVindasState extends State<TelaBoasVindas> {
       ),
       _passo(
         1,
+        'Motorista e caminhão',
+        'O nome e a placa saem no relatório e no acerto, para o proprietário saber de quem é cada registro. '
+            'Se trocar de caminhão, é só trocar a placa em Configurações.',
+        CamposIdentificacao(
+          nome: _nome,
+          placa: _placa,
+          erroNome: _erroNome,
+          erroPlaca: _erroPlaca,
+          aoMudar: () {
+            if (_erroNome != null || _erroPlaca != null) {
+              setState(() {
+                _erroNome = null;
+                _erroPlaca = null;
+              });
+            }
+          },
+        ),
+      ),
+      _passo(
+        2,
         'Sua comissão',
-        'Antes de começar, quatro perguntas rápidas sobre o seu combinado. Elas mudam a conta do seu líquido.',
+        'Agora quatro perguntas rápidas sobre o seu combinado. Elas mudam a conta do seu líquido.',
         const PerguntaComissao(),
       ),
-      _passo(2, 'O dinheiro do frete', 'Para o app saber se precisa tirar a sua porcentagem.', const PerguntaFreteCheio()),
-      _passo(3, 'Diesel e gastos', 'Para saber se o gasto sai do seu líquido ou não.', const PerguntaGastos()),
-      _passo(4, 'Vale', 'Dinheiro que você pega adiantado durante a viagem.', const PerguntaVale()),
+      _passo(3, 'O dinheiro do frete', 'Para o app saber se precisa tirar a sua porcentagem.', const PerguntaFreteCheio()),
+      _passo(4, 'Diesel e gastos', 'Para saber se o gasto sai do seu líquido ou não.', const PerguntaGastos()),
+      _passo(5, 'Vale', 'Dinheiro que você pega adiantado durante a viagem.', const PerguntaVale()),
       ListView(
         padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         children: [
@@ -131,6 +178,8 @@ class _TelaBoasVindasState extends State<TelaBoasVindas> {
             Expanded(
               child: PageView(
                 controller: _paginas,
+                // So os botoes passam de pagina (o nome e a placa sao obrigatorios).
+                physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (p) => setState(() => _pagina = p),
                 children: paginas,
               ),

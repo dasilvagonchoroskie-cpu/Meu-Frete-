@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../dados/modelos.dart';
 import '../nucleo/formato.dart';
+import '../nucleo/placa.dart';
 import '../regras/dados_relatorio.dart';
 import '../regras/media_diesel.dart';
 import '../regras/resumo.dart';
@@ -45,14 +46,15 @@ const _verdePlaca = PdfColor.fromInt(0xFF0B5D3B);
 
 String nomeDoArquivoPdf(DadosRelatorio d) {
   final inicio = dataTexto(d.periodo.inicio).replaceAll('/', '-');
+  final placa = d.placa.isEmpty ? '' : '${normalizarPlaca(d.placa)}_';
   if (d.ehViagem) {
     var v = d.viagem.replaceAll(' para ', '-');
     v = _semAcento(v).replaceAll(RegExp(r'[^A-Za-z0-9\-]'), '');
     if (v.length > 40) v = v.substring(0, 40);
-    return 'MeuFrete_viagem_${v}_$inicio.pdf';
+    return 'MeuFrete_${placa}viagem_${v}_$inicio.pdf';
   }
   final fim = dataTexto(d.periodo.fim).replaceAll('/', '-');
-  return 'MeuFrete_${d.conteudo.arquivo}_${inicio}_a_$fim.pdf';
+  return 'MeuFrete_$placa${d.conteudo.arquivo}_${inicio}_a_$fim.pdf';
 }
 
 String _semAcento(String s) {
@@ -235,12 +237,15 @@ List<pw.Widget> _cabecalho(_Pdf p, DadosRelatorio d, DateTime agora) {
       width: double.infinity,
       color: _fundoCaixa,
       padding: const pw.EdgeInsets.fromLTRB(12, 8, 12, 10),
-      child: pw.Column(
+      child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Período', style: p.t(9.5, cor: _tintaCinza, negrito: true)),
-          pw.Text('${dataTexto(d.periodo.inicio)}  a  ${dataTexto(d.periodo.fim)}',
-              style: p.t(15, negrito: true, numero: true)),
+          pw.Expanded(
+            flex: 5,
+            child: _campoCaixa(p, 'Período', '${dataTexto(d.periodo.inicio)}  a  ${dataTexto(d.periodo.fim)}'),
+          ),
+          if (d.placa.isNotEmpty) pw.Expanded(flex: 3, child: _campoCaixa(p, 'Caminhão', placaTexto(d.placa))),
+          if (d.motorista.isNotEmpty) pw.Expanded(flex: 5, child: _campoCaixa(p, 'Motorista', d.motorista)),
         ],
       ),
     ),
@@ -248,6 +253,17 @@ List<pw.Widget> _cabecalho(_Pdf p, DadosRelatorio d, DateTime agora) {
     p.nota('Gerado em ${dataHoraTexto(agora.millisecondsSinceEpoch)}', tamanho: 9),
   ];
 }
+
+pw.Widget _campoCaixa(_Pdf p, String rotulo, String valor) => pw.Padding(
+      padding: const pw.EdgeInsets.only(right: 10),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(rotulo, style: p.t(9.5, cor: _tintaCinza, negrito: true)),
+          pw.Text(valor, style: p.t(14, negrito: true, numero: true)),
+        ],
+      ),
+    );
 
 List<pw.Widget> _resumo(_Pdf p, DadosRelatorio d) {
   final r = d.resultado;
@@ -560,6 +576,7 @@ Future<void> gerarEEnviarPdf(DadosRelatorio d) async {
   await arquivo.writeAsBytes(bytes, flush: true);
   await Share.shareXFiles(
     [XFile(arquivo.path, mimeType: 'application/pdf', name: nome)],
-    subject: d.ehViagem ? 'Acerto da viagem: ${d.viagem}' : 'Relatório Meu Frete',
+    subject: (d.ehViagem ? 'Acerto da viagem: ${d.viagem}' : 'Relatório Meu Frete') +
+        (d.placa.isEmpty ? '' : ' (${placaTexto(d.placa)})'),
   );
 }

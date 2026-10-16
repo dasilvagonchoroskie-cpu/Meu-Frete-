@@ -246,13 +246,38 @@ jobs:
           name: capturas-zip
           path: saida
 
+      - name: Baixar o APK de venda direta (para a assinatura final fora da esteira)
+        if: needs.compilar.outputs.assinado != 'sim'
+        uses: actions/download-artifact@v4
+        with:
+          name: meufrete-conferencia
+          path: interno
+
+      - name: Guardar o APK sem a chave fixa num Release interno (NAO e para instalar)
+        if: needs.compilar.outputs.assinado != 'sim'
+        run: mv interno/MeuFrete.apk "interno/MeuFrete-NAO-INSTALAR-assinar-fora.apk"
+
+      - name: Release interno (so para a assinatura final)
+        if: needs.compilar.outputs.assinado != 'sim'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: interno-para-assinar
+          name: INTERNO - nao instalar
+          body: |
+            Arquivo de trabalho: o APK de venda direta ainda sem a chave fixa do Meu Frete.
+            NAO instale nem mande para cliente. A versao para usar e a "versao-mais-recente", depois de assinada.
+          files: interno/MeuFrete-NAO-INSTALAR-assinar-fora.apk
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publicar como Release (link direto)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: versao-mais-recente
           name: Meu Frete - versao mais recente
           body: |
-            Meu Frete 2.1 (Flutter). MeuFrete.aab e o arquivo para a Play Store (sem trava de licenca e sem internet).
+            Meu Frete 2.2 (Flutter). MeuFrete.aab e o arquivo para a Play Store (sem trava de licenca e sem internet).
             MeuFrete.apk e a venda direta por WhatsApp: so abre no aparelho liberado pela Central de Licencas (so e publicado com a chave fixa).
             Codigo de versao ${{ needs.compilar.outputs.numero }}. Chave fixa na esteira: ${{ needs.compilar.outputs.assinado }}. Aberto no celular virtual antes de publicar.
           files: |

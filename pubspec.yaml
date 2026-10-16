@@ -4,7 +4,7 @@ publish_to: 'none'
 
 # versao visivel (2.0.0) + codigo de versao. A esteira troca o codigo pelo
 # numero da execucao, para a Play Store sempre receber um numero maior.
-version: 2.1.0+2000
+version: 2.2.0+2000
 
 environment:
   sdk: ">=3.8.0 <4.0.0"

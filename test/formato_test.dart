@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_frete/nucleo/entrada.dart';
 import 'package:meu_frete/nucleo/formato.dart';
+import 'package:meu_frete/nucleo/placa.dart';
 
 String digitar(TextInputFormatter f, String texto) =>
     f.formatEditUpdate(TextEditingValue.empty, TextEditingValue(text: texto)).text;
@@ -36,6 +37,18 @@ void main() {
     expect(lerNumero('R\$ 10,00'), 10);
     expect(lerNumero(''), 0);
     expect(lerNumero('abc'), 0);
+  });
+
+  test('placa do caminhao', () {
+    expect(normalizarPlaca('abc-1d23'), 'ABC1D23');
+    expect(placaValida('ABC1D23'), isTrue);
+    expect(placaValida('abc-1234'), isTrue);
+    expect(placaValida('AB1234'), isFalse);
+    expect(placaValida('1BC1D23'), isFalse);
+    expect(placaTexto('ABC1234'), 'ABC-1234');
+    expect(placaTexto('ABC1D23'), 'ABC1D23');
+    expect(digitar(const FormatadorPlaca(), 'rvg2c47x'), 'RVG2C47');
+    expect(digitar(const FormatadorPlaca(), 'hpa 4521'), 'HPA-4521');
   });
 
   test('mascaras', () {

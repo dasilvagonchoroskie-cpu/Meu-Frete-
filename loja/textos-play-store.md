@@ -34,7 +34,10 @@ RESUMO DO MÊS
 • Escolha o período: este mês, mês passado, 7, 15 ou 30 dias, ou as datas que quiser
 
 ACERTO EM PDF
-Gere o acerto de uma viagem ou o relatório do período e mande pelo WhatsApp ou e-mail. Folha branca, letra grande, fácil de ler no celular ou imprimir.
+Gere o acerto de uma viagem ou o relatório do período e mande pelo WhatsApp ou e-mail. Sai com o nome do motorista e a placa do caminhão, para o proprietário saber de quem é cada registro. Folha branca, letra grande, fácil de ler no celular ou imprimir.
+
+TROCOU DE CAMINHÃO?
+É só trocar a placa. O caminhão novo começa com as contas e a média zeradas, e o que foi anotado no anterior fica guardado.
 
 SEU DADO É SEU
 • Funciona sem internet
