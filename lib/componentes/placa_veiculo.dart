@@ -23,7 +23,9 @@ class PlacaVeiculo extends StatelessWidget {
           border: Border.all(color: Paleta.asfalto, width: tamanho * 0.08),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
+        // Largura do proprio texto (a faixa azul acompanha), mesmo dentro de Row.
+        child: IntrinsicWidth(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -54,6 +56,7 @@ class PlacaVeiculo extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

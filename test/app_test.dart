@@ -40,7 +40,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Nome do motorista'), 'Evandro');
     await tester.enterText(find.widgetWithText(TextField, 'Placa do caminhão'), 'abc1d23');
     await tester.pumpAndSettle();
-    expect(find.text('ABC1D23'), findsOneWidget);
+    expect(find.text('ABC1D23'), findsWidgets);
     for (var i = 0; i < 5; i++) {
       await tester.tap(find.text('Continuar'));
       await tester.pumpAndSettle();

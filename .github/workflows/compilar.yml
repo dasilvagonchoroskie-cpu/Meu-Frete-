@@ -65,6 +65,18 @@ jobs:
           flutter test --tags capturas --update-goldens 2>&1 | tee capturas.log
           ls -la test/capturas || true
 
+      - name: Guardar os registros da esteira no repositorio (quando falha)
+        if: failure()
+        run: |
+          mkdir -p logs/esteira
+          rm -f logs/esteira/*
+          for f in analise.log teste.log capturas.log build.log build-aab.log; do [ -f "$f" ] && cp "$f" logs/esteira/; done
+          git config user.name "acoes"
+          git config user.email "acoes@local"
+          git add logs/esteira
+          git commit -m "registro da esteira com falha (montagem ${{ github.run_number }}) [skip ci]" || exit 0
+          git push || (git pull --rebase && git push) || true
+
       - name: Publicar as imagens (artefato)
         if: always()
         uses: actions/upload-artifact@v4
